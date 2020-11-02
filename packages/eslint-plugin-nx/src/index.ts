@@ -9,6 +9,10 @@ import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from './rules/enforce-module-boundaries';
 
+import noBarrelFilesImport, {
+  RULE_NAME as noBarrelFilesImportRuleName,
+} from './rules/no-barrel-files-import';
+
 module.exports = {
   configs: {
     typescript,
@@ -20,5 +24,6 @@ module.exports = {
   },
   rules: {
     [enforceModuleBoundariesRuleName]: enforceModuleBoundaries,
+    [noBarrelFilesImportRuleName]: noBarrelFilesImport,
   },
 };

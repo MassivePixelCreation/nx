@@ -309,6 +309,13 @@ function updateTsLint() {
         depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }],
       },
     ];
+    tslintJson.rules['no-barrel-files-import'] = [
+      true,
+      {
+        disableImportFromMainIndex: false,
+        disableImportFromAnyIndex: false
+      },
+    ];
     return tslintJson;
   });
 }

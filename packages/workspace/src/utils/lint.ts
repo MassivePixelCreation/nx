@@ -229,6 +229,13 @@ const globalTsLint = `
           { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
         ]
       }
+    ],
+    "no-barrel-files-import: [
+      true,
+      {
+        "disableImportFromMainIndex": false,
+        "disableImportFromAnyIndex": false
+      }
     ]
   }
 }

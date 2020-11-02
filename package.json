@@ -16,7 +16,7 @@
     "e2e-ci": "./scripts/e2e-ci.sh",
     "format": "./scripts/format.sh",
     "nx-release": "./scripts/nx-release.js",
-    "test": "nx run-many --target=test --all --parallel",
+    "test": "nx run-many --target=test --projects=eslint-plugin-nx --parallel", // REMOVE BEFORE COMMIT!
     "lint": "nx run-many --target=lint --all --parallel",
     "depcheck": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/depcheck.ts",
     "local-registry": "./scripts/local-registry.sh",
