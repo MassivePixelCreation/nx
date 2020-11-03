@@ -47,8 +47,12 @@ function checkIfImportIsFromMainIndexFile(params: {
   const filePathInsideProject = importPath.replace(sourceFilePath, projectSourceRoot);
   const fileNestingCount = getStringOccuringCount(filePathInsideProject, '/');;
   const importNestingCount = getStringOccuringCount(importPath, '../');
+  const currentImportIsInMainFolder = fileNestingCount === 1 && importNestingCount === 0;
 
-  return importNestingCount === fileNestingCount;
+  console.log('fileNestingCount: ' + fileNestingCount);
+  console.log('importNestingCount: ' + importNestingCount);
+
+  return currentImportIsInMainFolder || importNestingCount === fileNestingCount;
 }
 
 function getStringOccuringCount(text: string, textToCount: string): number {
@@ -90,7 +94,6 @@ function getProjectSourceRootFromWorkspaceJSON(projectName: string): string {
 
 function getProjectAliasInTSConfigByRoot(tsConfig: TsConfigJson, root: string): string {
   const paths = tsConfig ? tsConfig.compilerOptions.paths : null;
-
   return Object.keys(paths).find(key => {
     const project = paths[key];
     const projectRoot = project ? project[0] : '';
@@ -114,8 +117,8 @@ function getProjectPath(): string {
   return normalize((global as any).projectPath || appRootPath);
 }
 
-function getTsConfig(projectPath: string): TsConfigJson {
-  return readJsonFile<TsConfigJson>(`${projectPath}/tsconfig.json`);
+function getTsConfig(): TsConfigJson {
+  return readJsonFile<TsConfigJson>(`${appRootPath}/tsconfig.json`);
 }
 
 function checkIfImportIsEqualToAlias(importPath: string, alias: string): boolean {
@@ -175,7 +178,7 @@ export default createESLintRule<Options, MessageIds>({
      */
     const projectGraph = getProjectGraph();
     const projectPath = getProjectPath();
-    const tsConfig = getTsConfig(projectPath);
+    const tsConfig = getTsConfig();
     const sourceFilePath = getSourceFilePath(context.getFilename(), projectPath);
     const sourceProjectName = getSourceProjectName(projectGraph, sourceFilePath);
 
@@ -202,7 +205,7 @@ export default createESLintRule<Options, MessageIds>({
           importPath,
           npmScope
         );
-  
+
         const isImportFromCurrentProject = checkIfImportIsFromCurrentProject(sourceProjectName, targetProjectName);
   
         if (!isImportFromCurrentProject) {
@@ -232,6 +235,14 @@ export default createESLintRule<Options, MessageIds>({
           This rule does not allow to import files by using main index.ts file of this project inside the project.
           You need to enable this condition in rule's options.
         */
+
+          console.log('disableImportFromMainIndex: ' + disableImportFromMainIndex);
+          console.log('indexFileName: ' + indexFileName);
+          console.log('sourceFilePath: ' + sourceFilePath);
+          console.log('projectSourceRoot: ' + projectSourceRoot);
+          console.log('importPath: ' + importPath);
+          console.log('--------------------------------');
+
         const importIsFromMainIndexFile = disableImportFromMainIndex && checkIfImportIsFromMainIndexFile({
           importPath,
           projectSourceRoot,
