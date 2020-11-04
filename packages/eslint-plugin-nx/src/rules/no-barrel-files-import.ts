@@ -1,10 +1,20 @@
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
-import { findProjectUsingImport, findSourceProject, getSourceFilePath } from '@nrwl/workspace/src/utils/runtime-lint-utils';
+import {
+  findProjectUsingImport,
+  findSourceProject,
+  getSourceFilePath,
+} from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import { TSESTree } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalize } from '@angular-devkit/core';
-import { createProjectGraph, ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { readNxJson, readWorkspaceJson } from '@nrwl/workspace/src/core/file-utils';
+import {
+  createProjectGraph,
+  ProjectGraph,
+} from '@nrwl/workspace/src/core/project-graph';
+import {
+  readNxJson,
+  readWorkspaceJson,
+} from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
 import { readJsonFile } from '@nrwl/workspace/src/utils/fileutils';
 
@@ -25,11 +35,17 @@ export type MessageIds = 'importUsingAlias' | 'importFromParentAndCurrentRoot';
 
 export const RULE_NAME = 'no-barrel-files-import';
 
-function checkIfImportIsFromCurrentProject(sourceProjectName: string, targetProjectName: string): boolean {
+function checkIfImportIsFromCurrentProject(
+  sourceProjectName: string,
+  targetProjectName: string
+): boolean {
   return sourceProjectName === targetProjectName;
 }
 
-function checkIfImportIsFromIndexFile(importPath: string, indexFileName: string = 'index'): boolean {
+function checkIfImportIsFromIndexFile(
+  importPath: string,
+  indexFileName: string = 'index'
+): boolean {
   if (!importPath) {
     return;
   }
@@ -62,9 +78,12 @@ function getProjectSourceRootFromWorkspaceJSON(projectName: string): string {
   return project ? project.sourceRoot : null;
 }
 
-function getProjectAliasInTSConfigByRoot(tsConfig: TsConfigJson, root: string): string {
+function getProjectAliasInTSConfigByRoot(
+  tsConfig: TsConfigJson,
+  root: string
+): string {
   const paths = tsConfig ? tsConfig.compilerOptions.paths : null;
-  return Object.keys(paths).find(key => {
+  return Object.keys(paths).find((key) => {
     const project = paths[key];
     const projectRoot = project ? project[0] : '';
 
@@ -72,28 +91,40 @@ function getProjectAliasInTSConfigByRoot(tsConfig: TsConfigJson, root: string): 
   });
 }
 
-function checkIfImportFromIndexIsAllowed(params: {
-  importPath?: string;
-  projectSourceRoot?: string,
-  sourceFilePath?: string,
-  indexFileName?: string
-} = {}): boolean {
+function checkIfImportFromIndexIsAllowed(
+  params: {
+    importPath?: string;
+    projectSourceRoot?: string;
+    sourceFilePath?: string;
+    indexFileName?: string;
+  } = {}
+): boolean {
   const { importPath, projectSourceRoot, sourceFilePath } = params;
   const indexFileName = params.indexFileName || 'index';
-  const isImportFromIndexFile = checkIfImportIsFromIndexFile(importPath, indexFileName);
+  const isImportFromIndexFile = checkIfImportIsFromIndexFile(
+    importPath,
+    indexFileName
+  );
 
   if (!isImportFromIndexFile) {
     return true;
   }
 
-  const filePathInsideProject = importPath.replace(sourceFilePath, projectSourceRoot);
+  const filePathInsideProject = importPath.replace(
+    sourceFilePath,
+    projectSourceRoot
+  );
   const importIsFromParentFolder = importPath.includes('../');
-  const importIsFromCurrentFolder = filePathInsideProject === `./${indexFileName}`;
+  const importIsFromCurrentFolder =
+    filePathInsideProject === `./${indexFileName}`;
 
- return !importIsFromCurrentFolder && !importIsFromParentFolder;
+  return !importIsFromCurrentFolder && !importIsFromParentFolder;
 }
 
-function getIndexFileNameFromTSConfig(tsConfig: TsConfigJson, alias: string): string {
+function getIndexFileNameFromTSConfig(
+  tsConfig: TsConfigJson,
+  alias: string
+): string {
   const paths = tsConfig ? tsConfig.compilerOptions.paths : null;
 
   const project = paths[alias];
@@ -112,11 +143,17 @@ function getTsConfig(): TsConfigJson {
   return readJsonFile<TsConfigJson>(`${appRootPath}/tsconfig.base.json`);
 }
 
-function checkIfImportIsEqualToAlias(importPath: string, alias: string): boolean {
+function checkIfImportIsEqualToAlias(
+  importPath: string,
+  alias: string
+): boolean {
   return importPath === alias;
 }
 
-function getSourceProjectName(projectGraph: ProjectGraph, sourceFilePath: string): string {
+function getSourceProjectName(
+  projectGraph: ProjectGraph,
+  sourceFilePath: string
+): string {
   const sourceProject = findSourceProject(projectGraph, sourceFilePath);
   return sourceProject ? sourceProject.name : null;
 }
@@ -126,8 +163,15 @@ function getTargetProjectName(
   targetProjectLocator: TargetProjectLocator,
   sourceFilePath: string,
   importPath: string,
-  npmScope: string): string {
-  const targetProject = findProjectUsingImport(projectGraph, targetProjectLocator, sourceFilePath, importPath, npmScope);
+  npmScope: string
+): string {
+  const targetProject = findProjectUsingImport(
+    projectGraph,
+    targetProjectLocator,
+    sourceFilePath,
+    importPath,
+    npmScope
+  );
   return targetProject ? targetProject.name : null;
 }
 
@@ -138,34 +182,41 @@ export default createESLintRule<Options, MessageIds>({
     docs: {
       description: 'No barrel files imports allowed',
       category: 'Possible Errors',
-      recommended: 'error'
+      recommended: 'error',
     },
     fixable: 'code',
     schema: [
       {
         type: 'object',
         properties: {
-          disableImportFromParentAndCurrentRoot: { type: 'boolean' }
+          disableImportFromParentAndCurrentRoot: { type: 'boolean' },
         },
         additionalProperties: false,
       },
     ],
     messages: {
       importUsingAlias: 'import using current project alias is not allowed',
-      importFromParentAndCurrentRoot: 'Import directly from index.ts file from parent root or current root is not allowed.',
+      importFromParentAndCurrentRoot:
+        'Import directly from index.ts file from parent root or current root is not allowed.',
     },
   },
   defaultOptions: [
     {
-      disableImportFromParentAndCurrentRoot: false
+      disableImportFromParentAndCurrentRoot: false,
     },
   ],
   create(context, [{ disableImportFromParentAndCurrentRoot }]) {
     const projectGraph = getProjectGraph();
     const projectPath = getProjectPath();
     const tsConfig = getTsConfig();
-    const sourceFilePath = getSourceFilePath(context.getFilename(), projectPath);
-    const sourceProjectName = getSourceProjectName(projectGraph, sourceFilePath);
+    const sourceFilePath = getSourceFilePath(
+      context.getFilename(),
+      projectPath
+    );
+    const sourceProjectName = getSourceProjectName(
+      projectGraph,
+      sourceFilePath
+    );
 
     const nxJson = readNxJson();
     (global as any).npmScope = nxJson.npmScope;
@@ -191,30 +242,41 @@ export default createESLintRule<Options, MessageIds>({
           npmScope
         );
 
-        const isImportFromCurrentProject = checkIfImportIsFromCurrentProject(sourceProjectName, targetProjectName);
-  
+        const isImportFromCurrentProject = checkIfImportIsFromCurrentProject(
+          sourceProjectName,
+          targetProjectName
+        );
+
         if (!isImportFromCurrentProject) {
           return;
         }
-  
-        const projectSourceRoot = getProjectSourceRootFromWorkspaceJSON(targetProjectName);
-        const alias = getProjectAliasInTSConfigByRoot(tsConfig, projectSourceRoot);
+
+        const projectSourceRoot = getProjectSourceRootFromWorkspaceJSON(
+          targetProjectName
+        );
+        const alias = getProjectAliasInTSConfigByRoot(
+          tsConfig,
+          projectSourceRoot
+        );
         const indexFileName = getIndexFileNameFromTSConfig(tsConfig, alias);
-  
+
         /*
           It checks if current import uses alias of current project.
           This rule does not allow to import files by using current project's alias inside the project.
         */
-        const importIsEqualToAlias = checkIfImportIsEqualToAlias(importPath, alias);
-  
-          if (importIsEqualToAlias) {
-            context.report({
-              node,
-              messageId: 'importUsingAlias',
-            });
-            return;
-          }
-  
+        const importIsEqualToAlias = checkIfImportIsEqualToAlias(
+          importPath,
+          alias
+        );
+
+        if (importIsEqualToAlias) {
+          context.report({
+            node,
+            messageId: 'importUsingAlias',
+          });
+          return;
+        }
+
         /*
           This rule does not allow to import index.ts file form parrent root or from current root.
           You need to enable this condition in rule's options.
@@ -224,21 +286,21 @@ export default createESLintRule<Options, MessageIds>({
           return;
         }
 
-       const importFromIndexIsAllowed = checkIfImportFromIndexIsAllowed({
-        importPath,
-        projectSourceRoot,
-        sourceFilePath,
-        indexFileName
-      });
-
-      if (!importFromIndexIsAllowed) {
-        context.report({
-          node,
-          messageId: 'importFromParentAndCurrentRoot',
+        const importFromIndexIsAllowed = checkIfImportFromIndexIsAllowed({
+          importPath,
+          projectSourceRoot,
+          sourceFilePath,
+          indexFileName,
         });
-        return;
-      }
-      }
+
+        if (!importFromIndexIsAllowed) {
+          context.report({
+            node,
+            messageId: 'importFromParentAndCurrentRoot',
+          });
+          return;
+        }
+      },
     };
   },
 });

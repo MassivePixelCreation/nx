@@ -32,9 +32,9 @@ describe('Update root ESLint config to use overrides', () => {
           '@nrwl/nx/no-barrel-files-import': [
             'error',
             {
-              disableImportFromParentAndCurrentRoot: false
-            }
-          ]
+              disableImportFromParentAndCurrentRoot: false,
+            },
+          ],
         },
       },
       expected: {
@@ -58,9 +58,9 @@ describe('Update root ESLint config to use overrides', () => {
               '@nrwl/nx/no-barrel-files-import': [
                 'error',
                 {
-                  disableImportFromParentAndCurrentRoot: false
-                }
-              ]
+                  disableImportFromParentAndCurrentRoot: false,
+                },
+              ],
             },
           },
           {

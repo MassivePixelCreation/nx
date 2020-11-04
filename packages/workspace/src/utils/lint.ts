@@ -272,9 +272,9 @@ const globalESLint = JSON.stringify({
         '@nrwl/nx/no-barrel-files-import': [
           'error',
           {
-            disableImportFromParentAndCurrentRoot: false
-          }
-        ]
+            disableImportFromParentAndCurrentRoot: false,
+          },
+        ],
       },
     },
 
