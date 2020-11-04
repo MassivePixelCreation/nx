@@ -46,6 +46,12 @@ describe('Update eslint builder and config for 10.3.0', () => {
               ],
             },
           ],
+          '@nrwl/nx/no-barrel-files-import': [
+            'error',
+            {
+              disableImportFromParentAndCurrentRoot: false
+            }
+          ]
         },
         overrides: [
           {

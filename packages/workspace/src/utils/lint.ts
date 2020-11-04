@@ -233,8 +233,7 @@ const globalTsLint = `
     "no-barrel-files-import: [
       true,
       {
-        "disableImportFromMainIndex": false,
-        "disableImportFromAnyIndex": false
+        "disableImportFromParentAndCurrentRoot": false
       }
     ]
   }
@@ -270,6 +269,12 @@ const globalESLint = JSON.stringify({
             ],
           },
         ],
+        '@nrwl/nx/no-barrel-files-import': [
+          'error',
+          {
+            disableImportFromParentAndCurrentRoot: false
+          }
+        ]
       },
     },
 

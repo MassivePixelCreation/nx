@@ -86,6 +86,12 @@ describe('Update ESLint config files to use preset configs which eslint-plugin-n
               ],
             },
           ],
+          '@nrwl/nx/no-barrel-files-import': [
+            'error',
+            {
+              disableImportFromParentAndCurrentRoot: false
+            }
+          ]
         },
         overrides: [
           {

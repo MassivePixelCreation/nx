@@ -312,8 +312,7 @@ function updateTsLint() {
     tslintJson.rules['no-barrel-files-import'] = [
       true,
       {
-        disableImportFromMainIndex: false,
-        disableImportFromAnyIndex: false
+        disableImportFromParentAndCurrentRoot: false
       },
     ];
     return tslintJson;

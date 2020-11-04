@@ -10,8 +10,7 @@ import { readJsonFile } from '@nrwl/workspace/src/utils/fileutils';
 
 type Options = [
   {
-    disableImportFromMainIndex: boolean;
-    disableImportFromAnyIndex: boolean;
+    disableImportFromParentAndCurrentRoot: boolean;
   }
 ];
 
@@ -22,41 +21,12 @@ export interface TsConfigJson {
   include?: string[];
 }
 
-export type MessageIds = 'importUsingAlias' | 'importFromIndexFile' | 'importFromMainIndexFile';
+export type MessageIds = 'importUsingAlias' | 'importFromParentAndCurrentRoot';
 
 export const RULE_NAME = 'no-barrel-files-import';
 
 function checkIfImportIsFromCurrentProject(sourceProjectName: string, targetProjectName: string): boolean {
   return sourceProjectName === targetProjectName;
-}
-
-function checkIfImportIsFromMainIndexFile(params: {
-  importPath?: string;
-  projectSourceRoot?: string,
-  sourceFilePath?: string,
-  indexFileName?: string
-} = {}): boolean {
-  const { importPath, projectSourceRoot, sourceFilePath } = params;
-  const indexFileName = params.indexFileName || 'index';
-  const isImportFromIndexFile = checkIfImportIsFromIndexFile(importPath, indexFileName);
-
-  if (!isImportFromIndexFile) {
-    return;
-  }
-
-  const filePathInsideProject = importPath.replace(sourceFilePath, projectSourceRoot);
-  const fileNestingCount = getStringOccuringCount(filePathInsideProject, '/');;
-  const importNestingCount = getStringOccuringCount(importPath, '../');
-  const currentImportIsInMainFolder = fileNestingCount === 1 && importNestingCount === 0;
-
-  console.log('fileNestingCount: ' + fileNestingCount);
-  console.log('importNestingCount: ' + importNestingCount);
-
-  return currentImportIsInMainFolder || importNestingCount === fileNestingCount;
-}
-
-function getStringOccuringCount(text: string, textToCount: string): number {
-  return text ? (text.match(RegExp(textToCount ,'g')) || []).length : 0;
 }
 
 function checkIfImportIsFromIndexFile(importPath: string, indexFileName: string = 'index'): boolean {
@@ -102,6 +72,27 @@ function getProjectAliasInTSConfigByRoot(tsConfig: TsConfigJson, root: string): 
   });
 }
 
+function checkIfImportFromIndexIsAllowed(params: {
+  importPath?: string;
+  projectSourceRoot?: string,
+  sourceFilePath?: string,
+  indexFileName?: string
+} = {}): boolean {
+  const { importPath, projectSourceRoot, sourceFilePath } = params;
+  const indexFileName = params.indexFileName || 'index';
+  const isImportFromIndexFile = checkIfImportIsFromIndexFile(importPath, indexFileName);
+
+  if (!isImportFromIndexFile) {
+    return true;
+  }
+
+  const filePathInsideProject = importPath.replace(sourceFilePath, projectSourceRoot);
+  const importIsFromParentFolder = importPath.includes('../');
+  const importIsFromCurrentFolder = filePathInsideProject === `./${indexFileName}`;
+
+ return !importIsFromCurrentFolder && !importIsFromParentFolder;
+}
+
 function getIndexFileNameFromTSConfig(tsConfig: TsConfigJson, alias: string): string {
   const paths = tsConfig ? tsConfig.compilerOptions.paths : null;
 
@@ -118,7 +109,7 @@ function getProjectPath(): string {
 }
 
 function getTsConfig(): TsConfigJson {
-  return readJsonFile<TsConfigJson>(`${appRootPath}/tsconfig.json`);
+  return readJsonFile<TsConfigJson>(`${appRootPath}/tsconfig.base.json`);
 }
 
 function checkIfImportIsEqualToAlias(importPath: string, alias: string): boolean {
@@ -154,28 +145,22 @@ export default createESLintRule<Options, MessageIds>({
       {
         type: 'object',
         properties: {
-          disableImportFromMainIndex: { type: 'boolean' },
-          disableImportFromAnyIndex: { type: 'boolean' }
+          disableImportFromParentAndCurrentRoot: { type: 'boolean' }
         },
         additionalProperties: false,
       },
     ],
     messages: {
-      importUsingAlias: 'import using current lib alias is not allowed',
-      importFromIndexFile: 'Import directly from any index.ts file is not allowed.',
-      importFromMainIndexFile: 'import directly from main index.ts file of current lib is not allowed.'
+      importUsingAlias: 'import using current project alias is not allowed',
+      importFromParentAndCurrentRoot: 'Import directly from index.ts file from parent root or current root is not allowed.',
     },
   },
   defaultOptions: [
     {
-      disableImportFromMainIndex: false,
-      disableImportFromAnyIndex: false
+      disableImportFromParentAndCurrentRoot: false
     },
   ],
-  create(context, [{ disableImportFromMainIndex, disableImportFromAnyIndex }]) {
-    /**
-     * Globally cached info about workspace
-     */
+  create(context, [{ disableImportFromParentAndCurrentRoot }]) {
     const projectGraph = getProjectGraph();
     const projectPath = getProjectPath();
     const tsConfig = getTsConfig();
@@ -231,47 +216,28 @@ export default createESLintRule<Options, MessageIds>({
           }
   
         /*
-          It checks if current import uses main index.ts file of current project.
-          This rule does not allow to import files by using main index.ts file of this project inside the project.
+          This rule does not allow to import index.ts file form parrent root or from current root.
           You need to enable this condition in rule's options.
         */
 
-          console.log('disableImportFromMainIndex: ' + disableImportFromMainIndex);
-          console.log('indexFileName: ' + indexFileName);
-          console.log('sourceFilePath: ' + sourceFilePath);
-          console.log('projectSourceRoot: ' + projectSourceRoot);
-          console.log('importPath: ' + importPath);
-          console.log('--------------------------------');
+        if (!disableImportFromParentAndCurrentRoot) {
+          return;
+        }
 
-        const importIsFromMainIndexFile = disableImportFromMainIndex && checkIfImportIsFromMainIndexFile({
-          importPath,
-          projectSourceRoot,
-          sourceFilePath,
-          indexFileName
+       const importFromIndexIsAllowed = checkIfImportFromIndexIsAllowed({
+        importPath,
+        projectSourceRoot,
+        sourceFilePath,
+        indexFileName
+      });
+
+      if (!importFromIndexIsAllowed) {
+        context.report({
+          node,
+          messageId: 'importFromParentAndCurrentRoot',
         });
-  
-        if (importIsFromMainIndexFile) {
-          context.report({
-            node,
-            messageId: 'importFromMainIndexFile',
-          });
-          return;
-        }
-  
-        /*
-          It checks if current import uses any index.ts file of current project.
-          This rule does not allow to import files by using any index.ts file of this project inside the project.
-          You need to enable this condition in rule's options.
-        */
-        const importIsFromIndexFile = disableImportFromAnyIndex && checkIfImportIsFromIndexFile(importPath, indexFileName);
-  
-        if (importIsFromIndexFile) {
-          context.report({
-            node,
-            messageId: 'importFromIndexFile',
-          });
-          return;
-        }
+        return;
+      }
       }
     };
   },

@@ -55,7 +55,7 @@ const tsconfig = {
 
 
 const fileSys = {
-  './tsconfig.json': JSON.stringify(tsconfig),
+  './tsconfig.base.json': JSON.stringify(tsconfig),
   './workspace.json': JSON.stringify(workspaceConfig),
   './nx.json': JSON.stringify(nxConfig),
 };
@@ -129,15 +129,15 @@ describe('No Barrel Files Import', () => {
     expect(failures[0].messageId).toBe('importUsingAlias');
   });
 
-  describe('disable import from main index option', () => {
-    it('should not error when disableImportFromMainIndex option is disabled and import from main index.ts file', () => {
+  describe('disable import from parent and current root option', () => {
+    it('should not error when the option is disabled', () => {
       const failures = runRule(
-        { disableImportFromMainIndex: false },
+        { disableImportFromParentAndCurrentRoot: false },
         `${process.cwd()}/proj/libs/test/src/index.ts`,
         `
-          import './index.ts';
-          import '../index.ts';
-          import '../../index.ts';
+          import './index';
+          import '../index';
+          import '../../index';
         `,
         defaultGraph
       );
@@ -145,64 +145,56 @@ describe('No Barrel Files Import', () => {
       expect(failures.length).toEqual(0);
     });
 
-    it('should error when disableImportFromMainIndex option is enabled and import from main index.ts file', () => {
+    it('should error when the option is enabled and imports from index.ts file from parrent root', () => {
       const noNestingFailures = runRule(
-        { disableImportFromMainIndex: true },
+        { disableImportFromParentAndCurrentRoot: true },
         `${process.cwd()}/proj/libs/test/src/main.ts`,
         `
-          import './index.ts';
+          import './index';
         `,
         defaultGraph
       );
 
       expect(noNestingFailures.length).toEqual(1);
-      expect(noNestingFailures[0].messageId).toBe('importFromMainIndexFile');
+      expect(noNestingFailures[0].messageId).toBe('importFromParentAndCurrentRoot');
 
       const nestingFailures = runRule(
-        { disableImportFromMainIndex: true },
+        { disableImportFromParentAndCurrentRoot: true },
         `${process.cwd()}/proj/libs/test/src/component/component.ts`,
         `
-          import '../../index.ts';
+          import '../../index';
         `,
         defaultGraph
       );
 
       expect(nestingFailures.length).toEqual(1);
-      expect(nestingFailures[0].messageId).toBe('importFromMainIndexFile');
-    });
-  });
-
-  describe('disable import from any index option', () => {
-    it('should not error when disableImportFromAnyIndex option is disabled and import from any index.ts file', () => {
-      const failures = runRule(
-        { disableImportFromMainIndex: false },
-        `${process.cwd()}/proj/libs/test/src/main.ts`,
-        `
-          import './index.ts';
-          import '../index.ts';
-          import '../../index.ts';
-        `,
-        defaultGraph
-      );
-  
-      expect(failures.length).toEqual(0);
+      expect(nestingFailures[0].messageId).toBe('importFromParentAndCurrentRoot');
     });
 
-    it('should error when disableImportFromAnyIndex option is enabled and import from any index.ts file', () => {
-      const failures = runRule(
-        { disableImportFromAnyIndex: true },
+    it('should error when the option is enabled and imports index.ts file from current root', () => {
+      const noNestingFailures = runRule(
+        { disableImportFromParentAndCurrentRoot: true },
         `${process.cwd()}/proj/libs/test/src/main.ts`,
         `
-          import './index.ts';
-          import '../index.ts';
-          import '../../index.ts';
+          import './index';
         `,
         defaultGraph
       );
 
-      console.log(failures);
-      expect(failures.length).toEqual(3);
-      expect(failures[0].messageId).toBe('importFromIndexFile');
+      expect(noNestingFailures.length).toEqual(1);
+      expect(noNestingFailures[0].messageId).toBe('importFromParentAndCurrentRoot');
+
+      const nestingFailures = runRule(
+        { disableImportFromParentAndCurrentRoot: true },
+        `${process.cwd()}/proj/libs/test/src/component/component.ts`,
+        `
+          import '../../index';
+        `,
+        defaultGraph
+      );
+
+      expect(nestingFailures.length).toEqual(1);
+      expect(nestingFailures[0].messageId).toBe('importFromParentAndCurrentRoot');
     });
   });
 });
