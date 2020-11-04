@@ -2,6 +2,7 @@
 
 // we can't import from '@nrwl/workspace' because it will require typescript
 // eslint-disable-next-line @nrwl/nx/enforce-module-boundaries
+// eslint-disable-next-line @nrwl/nx/no-barrel-files-import
 import { output } from '@nrwl/workspace/src/utils/output';
 import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
 import { dirSync } from 'tmp';

@@ -14,7 +14,7 @@ type Options = [
   }
 ];
 
-export interface TsConfigJson {
+interface TsConfigJson {
   compileOnSave?: boolean;
   compilerOptions?: { [key: string]: string };
   exclude?: string[];
