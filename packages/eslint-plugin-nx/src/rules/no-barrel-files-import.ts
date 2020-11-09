@@ -16,7 +16,11 @@ import {
   readWorkspaceJson,
 } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
-import { readJsonFile } from '@nrwl/workspace/src/utils/fileutils';
+import {
+  directoryExists,
+  fileExists,
+  readJsonFile,
+} from '@nrwl/workspace/src/utils/fileutils';
 
 type Options = [
   {
@@ -51,11 +55,37 @@ function checkIfImportIsFromIndexFile(
   }
   const lastSlashIndex = importPath.lastIndexOf('/');
 
-  if (lastSlashIndex === -1) {
-    return;
+  return (
+    lastSlashIndex > -1 &&
+    importPath.substring(lastSlashIndex).includes(indexFileName)
+  );
+}
+
+function checkIfImportIsFromFolderRoot(
+  importPath: string,
+  projectName?: string
+): boolean {
+  const lastSlashIndex = importPath.lastIndexOf('/');
+
+  // it means import is not from file directly, for example: '../', '../src/' or './test';
+  const importIsFromFolderRoot = lastSlashIndex === importPath.length - 1;
+
+  if (importIsFromFolderRoot) {
+    return true;
   }
 
-  return importPath.substring(lastSlashIndex).includes(indexFileName);
+  const importFileName = importPath.substring(lastSlashIndex + 1);
+  const projectGraph = getProjectGraph();
+  const project = projectGraph ? projectGraph.nodes[projectName] : null;
+  const importingFile = project
+    ? project.data.files.find((file) => {
+        const lastSlashIndexInFileName = file.file.lastIndexOf('/');
+        const fileName = file.file.substring(lastSlashIndexInFileName);
+        return importFileName === fileName;
+      })
+    : false;
+
+  return !!importingFile;
 }
 
 function getProjectGraph(): ProjectGraph {
@@ -74,7 +104,6 @@ function getProjectSourceRootFromWorkspaceJSON(projectName: string): string {
   const workspaceJson = readWorkspaceJson();
   const projects = workspaceJson ? workspaceJson.projects : null;
   const project = projects ? projects[projectName] : {};
-
   return project ? project.sourceRoot : null;
 }
 
@@ -97,17 +126,32 @@ function checkIfImportFromIndexIsAllowed(
     projectSourceRoot?: string;
     sourceFilePath?: string;
     indexFileName?: string;
+    targetProjectName?: string;
   } = {}
 ): boolean {
-  const { importPath, projectSourceRoot, sourceFilePath } = params;
+  const {
+    importPath,
+    projectSourceRoot,
+    sourceFilePath,
+    targetProjectName,
+  } = params;
   const indexFileName = params.indexFileName || 'index';
-  const isImportFromIndexFile = checkIfImportIsFromIndexFile(
+  const importIsFromFolderRoot = checkIfImportIsFromFolderRoot(
+    importPath,
+    targetProjectName
+  );
+
+  if (importIsFromFolderRoot) {
+    return false;
+  }
+
+  const importIsFromIndexFile = checkIfImportIsFromIndexFile(
     importPath,
     indexFileName
   );
 
-  if (!isImportFromIndexFile) {
-    return true;
+  if (importIsFromIndexFile) {
+    return false;
   }
 
   const filePathInsideProject = importPath.replace(
@@ -217,7 +261,6 @@ export default createESLintRule<Options, MessageIds>({
       projectGraph,
       sourceFilePath
     );
-
     const nxJson = readNxJson();
     (global as any).npmScope = nxJson.npmScope;
     const npmScope = (global as any).npmScope;
@@ -291,6 +334,7 @@ export default createESLintRule<Options, MessageIds>({
           projectSourceRoot,
           sourceFilePath,
           indexFileName,
+          targetProjectName,
         });
 
         if (!importFromIndexIsAllowed) {

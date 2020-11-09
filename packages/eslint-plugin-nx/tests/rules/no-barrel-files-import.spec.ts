@@ -143,6 +143,23 @@ describe('No Barrel Files Import', () => {
       expect(failures.length).toEqual(0);
     });
 
+    it('should error when the option is enabled and imports from from parrent folder root', () => {
+      const expectedMessageId = 'importFromParentAndCurrentRoot';
+      const failures = runRule(
+        { disableImportFromParentAndCurrentRoot: true },
+        `${process.cwd()}/proj/libs/test/src/main.ts`,
+        `
+          import '../test/';
+          import '../test';
+        `,
+        defaultGraph
+      );
+
+      expect(failures.length).toEqual(2);
+      expect(failures[0].messageId).toBe(expectedMessageId);
+      expect(failures[1].messageId).toBe(expectedMessageId);
+    });
+
     it('should error when the option is enabled and imports from index.ts file from parrent root', () => {
       const noNestingFailures = runRule(
         { disableImportFromParentAndCurrentRoot: true },
