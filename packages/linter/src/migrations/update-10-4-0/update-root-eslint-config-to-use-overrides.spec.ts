@@ -28,7 +28,7 @@ describe('Update root ESLint config to use overrides', () => {
                 { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
               ],
             },
-          ]
+          ],
         },
       },
       expected: {
@@ -48,7 +48,7 @@ describe('Update root ESLint config to use overrides', () => {
                     { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
                   ],
                 },
-              ]
+              ],
             },
           },
           {

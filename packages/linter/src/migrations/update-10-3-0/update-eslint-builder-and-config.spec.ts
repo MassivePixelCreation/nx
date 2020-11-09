@@ -45,7 +45,7 @@ describe('Update eslint builder and config for 10.3.0', () => {
                 { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
               ],
             },
-          ]
+          ],
         },
         overrides: [
           {
