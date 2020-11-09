@@ -28,13 +28,7 @@ describe('Update root ESLint config to use overrides', () => {
                 { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
               ],
             },
-          ],
-          '@nrwl/nx/no-barrel-files-import': [
-            'error',
-            {
-              disableImportFromParentAndCurrentRoot: false,
-            },
-          ],
+          ]
         },
       },
       expected: {
@@ -54,13 +48,7 @@ describe('Update root ESLint config to use overrides', () => {
                     { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
                   ],
                 },
-              ],
-              '@nrwl/nx/no-barrel-files-import': [
-                'error',
-                {
-                  disableImportFromParentAndCurrentRoot: false,
-                },
-              ],
+              ]
             },
           },
           {
