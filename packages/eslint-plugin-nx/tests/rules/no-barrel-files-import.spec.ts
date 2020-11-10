@@ -196,12 +196,16 @@ describe('No Barrel Files Import', () => {
         `${process.cwd()}/proj/libs/test/src/main.ts`,
         `
           import './index';
+          import '.';
         `,
         defaultGraph
       );
 
-      expect(noNestingFailures.length).toEqual(1);
+      expect(noNestingFailures.length).toEqual(2);
       expect(noNestingFailures[0].messageId).toBe(
+        'importFromParentAndCurrentRoot'
+      );
+      expect(noNestingFailures[1].messageId).toBe(
         'importFromParentAndCurrentRoot'
       );
 

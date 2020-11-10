@@ -65,6 +65,10 @@ function checkIfImportIsFromFolderRoot(
   importPath: string,
   projectName?: string
 ): boolean {
+  // it means import is from current folder
+  if (importPath === '.') {
+    return true;
+  }
   const lastSlashIndex = importPath.lastIndexOf('/');
 
   // it means import is not from file directly, for example: '../', '../src/' or './test';
@@ -241,7 +245,7 @@ export default createESLintRule<Options, MessageIds>({
     messages: {
       importUsingAlias: 'import using current project alias is not allowed',
       importFromParentAndCurrentRoot:
-        'Import directly from index.ts file from parent root or current root is not allowed.',
+        'Import from barrel file located in current or parent directory is not allowed.',
     },
   },
   defaultOptions: [
